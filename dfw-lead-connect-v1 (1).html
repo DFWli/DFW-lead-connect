@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DFW Lead Connect — Turn HVAC leads into booked jobs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#12202B;
+    --navy-2:#1B2E3C;
+    --paper:#F1F2ED;
+    --paper-2:#E7E8E1;
+    --ink:#16232B;
+    --ink-soft:#4A5760;
+    --copper:#C1652C;
+    --copper-dark:#8E4A1F;
+    --copper-light:#F0DDC9;
+    --steel:#2F6FA6;
+    --steel-light:#DCE8F1;
+    --green:#3F8F5F;
+    --green-light:#DDEEE2;
+    --red:#B23B33;
+    --red-light:#F5DEDC;
+    --border:#D8D6CC;
+    --border-dark:#33465555;
+    --radius:10px;
+    --font-display:'Oswald',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:var(--paper);
+    line-height:1.55;
+  }
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;letter-spacing:0.01em;margin:0;}
+  p{margin:0;}
+  a{color:inherit;}
+  button{font-family:var(--font-body);cursor:pointer;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--copper);
+    font-weight:500;
+  }
+  .eyebrow.on-dark{color:#E8AE84;}
+
+  /* ---------- NAV ---------- */
+  header.site-nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(18,32,43,0.97);
+    border-bottom:1px solid var(--border-dark);
+  }
+  .nav-inner{
+    max-width:1120px;margin:0 auto;padding:0 28px;
+    display:flex;align-items:center;justify-content:space-between;
+    height:64px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;color:#F1F2ED;text-decoration:none;}
+  .brand svg{flex-shrink:0;}
+  .brand-text{font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:0.02em;}
+  .brand-text span{color:var(--copper);}
+  nav.tabs{display:flex;gap:4px;background:rgba(255,255,255,0.06);padding:4px;border-radius:999px;}
+  nav.tabs button{
+    border:none;background:transparent;color:#B9C3CA;
+    font-size:13.5px;font-weight:500;padding:8px 16px;border-radius:999px;
+    transition:background .15s,color .15s;
+  }
+  nav.tabs button.active{background:var(--copper);color:#241205;}
+  nav.tabs button:not(.active):hover{color:#fff;}
+  .nav-cta{
+    background:var(--copper);color:#241205;border:none;
+    padding:10px 18px;border-radius:8px;font-size:13.5px;font-weight:600;
+    white-space:nowrap;
+  }
+  .nav-cta:hover{background:#D67238;}
+  .nav-mobile-toggle{display:none;}
+
+  /* ---------- VIEWS ---------- */
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:var(--navy);
+    color:#F1F2ED;
+    padding:76px 0 64px;
+    overflow:hidden;
+  }
+  .hero-grid{
+    display:grid;grid-template-columns:1.05fr 0.95fr;gap:56px;align-items:center;
+  }
+  .hero h1{
+    font-size:44px;line-height:1.12;margin-top:14px;color:#fff;
+  }
+  .hero h1 em{font-style:normal;color:var(--copper);}
+  .hero p.sub{
+    margin-top:20px;font-size:16.5px;color:#C7D0D6;max-width:480px;
+  }
+  .hero-ctas{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap;}
+  .btn-primary{
+    background:var(--copper);color:#241205;border:none;
+    padding:13px 22px;border-radius:8px;font-size:14.5px;font-weight:600;
+  }
+  .btn-primary:hover{background:#D67238;}
+  .btn-ghost{
+    background:transparent;color:#F1F2ED;border:1px solid #435460;
+    padding:13px 22px;border-radius:8px;font-size:14.5px;font-weight:500;
+  }
+  .btn-ghost:hover{border-color:#7C8C97;}
+
+  /* ticket board signature */
+  .ticket-board{position:relative;height:340px;}
+  .ticket{
+    position:absolute;left:0;right:0;
+    background:#1B2E3C;border:1px solid #34495A;border-radius:8px;
+    padding:14px 16px;font-family:var(--font-mono);font-size:12.5px;
+    opacity:0;animation:ticketIn .6s ease forwards;
+    box-shadow:0 10px 24px rgba(0,0,0,0.25);
+  }
+  .ticket .t-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .ticket .t-source{color:#8FA3AF;letter-spacing:0.04em;text-transform:uppercase;font-size:10.5px;}
+  .ticket .t-name{font-family:var(--font-body);font-weight:500;color:#F1F2ED;font-size:14px;margin-top:2px;}
+  .badge{
+    font-family:var(--font-body);font-size:11px;font-weight:600;
+    padding:3px 9px;border-radius:999px;white-space:nowrap;
+  }
+  .badge.recovered{background:var(--green-light);color:#245C3D;}
+  .badge.booked{background:var(--copper-light);color:var(--copper-dark);}
+  .badge.pending{background:var(--steel-light);color:#1E4C70;}
+  .ticket-1{top:0;z-index:4;animation-delay:.1s;}
+  .ticket-2{top:88px;z-index:3;animation-delay:.35s;}
+  .ticket-3{top:176px;z-index:2;animation-delay:.6s;}
+  .ticket-4{top:264px;z-index:1;animation-delay:.85s;}
+  @keyframes ticketIn{
+    from{opacity:0;transform:translateY(14px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .ticket{animation:none;opacity:1;}
+  }
+
+  /* ---------- STAT BAND ---------- */
+  .stat-band{background:var(--navy-2);border-top:1px solid var(--border-dark);}
+  .stat-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    padding:34px 0;
+  }
+  .stat{
+    padding:0 28px;border-left:1px solid var(--border-dark);
+  }
+  .stat:first-child{border-left:none;}
+  .stat .num{font-family:var(--font-display);font-size:30px;color:#fff;font-weight:600;}
+  .stat .label{font-size:13px;color:#9DAAB2;margin-top:4px;max-width:280px;}
+
+  /* ---------- SECTION GENERIC ---------- */
+  section{padding:76px 0;}
+  .section-head{max-width:600px;margin-bottom:44px;}
+  .section-head h2{font-size:30px;color:var(--ink);margin-top:12px;}
+  .section-head p{margin-top:14px;color:var(--ink-soft);font-size:15.5px;}
+
+  /* ---------- PIPELINE STEPS ---------- */
+  .pipeline{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;
+  }
+  .step{background:#fff;padding:28px 26px;}
+  .step .step-num{
+    font-family:var(--font-mono);font-size:13px;color:var(--copper);font-weight:500;
+  }
+  .step h3{font-size:17px;margin-top:10px;color:var(--ink);}
+  .step p{font-size:14px;color:var(--ink-soft);margin-top:8px;}
+
+  /* ---------- PROBLEM / WHY ---------- */
+  .why-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start;}
+  .why-list{display:flex;flex-direction:column;gap:22px;margin-top:26px;}
+  .why-item{display:flex;gap:14px;}
+  .why-dot{
+    width:8px;height:8px;border-radius:50%;background:var(--copper);margin-top:8px;flex-shrink:0;
+  }
+  .why-item h4{font-size:15px;font-weight:600;color:var(--ink);}
+  .why-item p{font-size:14px;color:var(--ink-soft);margin-top:4px;}
+  .quote-card{
+    background:var(--navy);color:#F1F2ED;border-radius:var(--radius);padding:34px;
+  }
+  .quote-card p.line{font-family:var(--font-mono);font-size:14px;color:#C7D0D6;margin-top:14px;line-height:1.7;}
+  .quote-card p.line b{color:#fff;font-weight:600;}
+
+  /* ---------- ROI TEASER ---------- */
+  .roi-teaser{
+    background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+    padding:40px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:30px;
+  }
+  .roi-teaser h3{font-size:22px;}
+  .roi-teaser p{color:var(--ink-soft);font-size:14.5px;margin-top:8px;max-width:440px;}
+
+  /* ---------- FINAL CTA ---------- */
+  .final-cta{background:var(--navy);color:#fff;}
+  .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start;}
+  .cta-grid h2{color:#fff;font-size:30px;margin-top:12px;}
+  .cta-grid p.sub{color:#C7D0D6;margin-top:14px;font-size:15px;max-width:420px;}
+  form.audit-form{
+    background:#1B2E3C;border:1px solid #34495A;border-radius:var(--radius);padding:26px;
+  }
+  form.audit-form label{
+    display:block;font-size:12.5px;color:#9DAAB2;margin-bottom:6px;margin-top:16px;
+  }
+  form.audit-form label:first-child{margin-top:0;}
+  form.audit-form input{
+    width:100%;background:#12202B;border:1px solid #34495A;border-radius:7px;
+    padding:11px 12px;color:#F1F2ED;font-size:14px;font-family:var(--font-body);
+  }
+  form.audit-form input:focus{outline:none;border-color:var(--copper);}
+  form.audit-form button{
+    margin-top:22px;width:100%;background:var(--copper);color:#241205;border:none;
+    padding:13px;border-radius:8px;font-size:14.5px;font-weight:600;
+  }
+  form.audit-form button:hover{background:#D67238;}
+  .form-note{font-size:12px;color:var(--text-danger,#F2A6A0);margin-top:8px;display:none;}
+  .form-success{
+    display:none;background:var(--green-light);color:#245C3D;border-radius:8px;
+    padding:14px 16px;font-size:13.5px;margin-top:16px;font-weight:500;
+  }
+
+  footer{background:var(--navy);border-top:1px solid var(--border-dark);padding:26px 0;}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;color:#7C8C97;font-size:12.5px;}
+
+  /* ---------- ROI CALCULATOR VIEW ---------- */
+  .calc-page{padding:56px 0 80px;}
+  .calc-head{max-width:640px;}
+  .calc-head h1{font-size:32px;margin-top:12px;}
+  .calc-head p{color:var(--ink-soft);margin-top:12px;font-size:15px;}
+  .calc-grid{display:grid;grid-template-columns:0.95fr 1.05fr;gap:36px;margin-top:44px;align-items:start;}
+  .calc-inputs{
+    background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:30px;
+  }
+  .field{margin-bottom:26px;}
+  .field:last-child{margin-bottom:0;}
+  .field-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .field label{font-size:13.5px;font-weight:500;color:var(--ink);}
+  .field .val{font-family:var(--font-mono);font-size:14px;color:var(--copper-dark);font-weight:500;}
+  input[type=range]{
+    width:100%;accent-color:var(--copper);height:4px;
+  }
+  .field-hint{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+
+  .calc-results{display:flex;flex-direction:column;gap:16px;}
+  .result-row{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:16px;
+  }
+  .metric-card{
+    background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:22px 22px;
+  }
+  .metric-card .m-label{font-size:12.5px;color:var(--ink-soft);font-weight:500;}
+  .metric-card .m-value{font-family:var(--font-mono);font-size:26px;color:var(--ink);margin-top:8px;font-weight:500;}
+  .metric-card.hero-metric{
+    background:var(--navy);border-color:var(--navy);grid-column:1/3;padding:28px;
+  }
+  .metric-card.hero-metric .m-label{color:#9DAAB2;}
+  .metric-card.hero-metric .m-value{color:#fff;font-size:38px;}
+  .metric-card.hero-metric .m-value span{color:#8FE0AC;}
+  .metric-card.hero-metric .m-sub{color:#C7D0D6;font-size:13px;margin-top:6px;}
+
+  .compare-bars{
+    background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:24px 26px;
+  }
+  .compare-bars h4{font-size:14px;font-weight:600;margin-bottom:18px;}
+  .bar-row{margin-bottom:16px;}
+  .bar-row:last-child{margin-bottom:0;}
+  .bar-label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;}
+  .bar-label b{color:var(--ink);font-family:var(--font-mono);font-weight:500;}
+  .bar-track{background:var(--paper-2);border-radius:6px;height:14px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:6px;transition:width .3s ease;}
+  .bar-fill.today{background:#B9C3CA;}
+  .bar-fill.after{background:var(--copper);}
+
+  .assumption-note{
+    font-size:12.5px;color:var(--ink-soft);background:var(--copper-light);
+    border-radius:8px;padding:12px 14px;line-height:1.5;
+  }
+
+  /* ---------- DASHBOARD VIEW ---------- */
+  .dash-page{padding:44px 0 80px;}
+  .dash-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;}
+  .dash-head h1{font-size:26px;}
+  .dash-head p{color:var(--ink-soft);font-size:14px;margin-top:8px;}
+  .dash-tag{
+    font-family:var(--font-mono);font-size:11.5px;background:var(--green-light);
+    color:#245C3D;padding:5px 12px;border-radius:999px;font-weight:500;
+  }
+  .dash-metrics{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:30px;
+  }
+  .dash-metrics .metric-card{padding:16px 16px;}
+  .dash-metrics .m-label{font-size:11.5px;}
+  .dash-metrics .m-value{font-size:20px;}
+  .dash-metrics .m-value.green{color:var(--green);}
+  .dash-body{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;margin-top:28px;}
+  .panel{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;}
+  .panel h3{font-size:15.5px;margin-bottom:16px;}
+  .activity-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-top:1px solid var(--border);gap:12px;
+  }
+  .activity-row:first-child{border-top:none;padding-top:0;}
+  .activity-left .a-source{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;}
+  .activity-left .a-name{font-size:13.5px;font-weight:500;margin-top:3px;}
+  .activity-left .a-detail{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
+  .activity-time{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);white-space:nowrap;}
+  .weekly-chart{display:flex;align-items:flex-end;gap:14px;height:160px;margin-top:6px;}
+  .week-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
+  .week-bars{display:flex;gap:4px;align-items:flex-end;height:120px;width:100%;justify-content:center;}
+  .week-bars .bar{width:14px;border-radius:3px 3px 0 0;}
+  .week-bars .bar.leads{background:#B9C3CA;}
+  .week-bars .bar.booked{background:var(--copper);}
+  .week-label{font-size:11px;color:var(--ink-soft);font-family:var(--font-mono);}
+  .legend{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--ink-soft);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+  @media (max-width:880px){
+    .hero-grid{grid-template-columns:1fr;}
+    .ticket-board{margin-top:20px;height:auto;position:static;}
+    .ticket{position:static;margin-bottom:14px;animation:none;opacity:1;}
+    .stat-grid{grid-template-columns:1fr;}
+    .stat{border-left:none;border-top:1px solid var(--border-dark);padding:20px 0;}
+    .stat:first-child{border-top:none;}
+    .pipeline{grid-template-columns:1fr;}
+    .why-grid{grid-template-columns:1fr;}
+    .cta-grid{grid-template-columns:1fr;}
+    .roi-teaser{grid-template-columns:1fr;text-align:left;}
+    .calc-grid{grid-template-columns:1fr;}
+    .dash-metrics{grid-template-columns:repeat(2,1fr);}
+    .dash-body{grid-template-columns:1fr;}
+    nav.tabs{display:none;}
+    .hero h1{font-size:32px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand" href="#" onclick="showView('overview');return false;">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <rect width="26" height="26" rx="6" fill="#C1652C"/>
+        <path d="M8 13.5L11.2 16.7L18 9.5" stroke="#12202B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand-text">DFW <span>Lead Connect</span></span>
+    </a>
+    <nav class="tabs">
+      <button class="active" data-tab="overview" onclick="showView('overview')">Overview</button>
+      <button data-tab="calculator" onclick="showView('calculator')">ROI calculator</button>
+      <button data-tab="dashboard" onclick="showView('dashboard')">Live dashboard</button>
+    </nav>
+    <button class="nav-cta" onclick="goToAudit()">Book a revenue audit</button>
+  </div>
+</header>
+
+<!-- ======================= OVERVIEW ======================= -->
+<div class="view active" id="view-overview">
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow on-dark">DFW HVAC · Revenue recovery system</p>
+        <h1>Every unanswered call is a sold job — <em>for someone else.</em></h1>
+        <p class="sub">You're already paying $45–$150 per HVAC lead in DFW. We make sure none of them go cold — instant response, AI booking, and follow-up on every lead you're already paying for.</p>
+        <div class="hero-ctas">
+          <button class="btn-primary" onclick="goToAudit()">Book a revenue audit</button>
+          <button class="btn-ghost" onclick="showView('calculator')">See the ROI calculator</button>
+        </div>
+      </div>
+      <div class="ticket-board">
+        <div class="ticket ticket-1">
+          <div class="t-top"><span class="t-source">Missed call · 12:04pm</span><span class="badge recovered">Texted in 8s</span></div>
+          <p class="t-name">(817) 555-0142</p>
+        </div>
+        <div class="ticket ticket-2">
+          <div class="t-top"><span class="t-source">Web lead · Today 9:41am</span><span class="badge booked">Booked Thu 2pm</span></div>
+          <p class="t-name">Sarah T. — no cool air, 2nd floor</p>
+        </div>
+        <div class="ticket ticket-3">
+          <div class="t-top"><span class="t-source">Estimate #4021</span><span class="badge pending">Follow-up sent</span></div>
+          <p class="t-name">Miguel R. — system replacement quote</p>
+        </div>
+        <div class="ticket ticket-4">
+          <div class="t-top"><span class="t-source">Customer since 2019</span><span class="badge recovered">Reactivated</span></div>
+          <p class="t-name">Dana K. — booked annual maintenance</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stat-band">
+    <div class="wrap stat-grid">
+      <div class="stat">
+        <p class="num">52%</p>
+        <p class="label">of home-services callers actually reach a live person on the other end</p>
+      </div>
+      <div class="stat">
+        <p class="num">&lt;5 min</p>
+        <p class="label">is the window before a DFW HVAC lead calls the next company on their list</p>
+      </div>
+      <div class="stat">
+        <p class="num">$45–150</p>
+        <p class="label">is what DFW HVAC companies already pay per lead — before we touch a thing</p>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">The offer</p>
+        <h2>We don't sell you more leads. We stop losing the ones you already paid for.</h2>
+        <p>Six pieces, working together on the leads flowing into your business right now — no new ad spend required to get started.</p>
+      </div>
+      <div class="pipeline">
+        <div class="step">
+          <p class="step-num">01</p>
+          <h3>Missed-call text-back</h3>
+          <p>Every unanswered call gets an instant text so the lead hears back from you first, not the next company on their list.</p>
+        </div>
+        <div class="step">
+          <p class="step-num">02</p>
+          <h3>Instant web-lead response</h3>
+          <p>A form fill gets a reply in seconds — not the next morning, when the homeowner has already booked someone else.</p>
+        </div>
+        <div class="step">
+          <p class="step-num">03</p>
+          <h3>AI qualification &amp; booking</h3>
+          <p>The AI texts back and forth like a dispatcher would, gets the details, and locks an appointment on the calendar.</p>
+        </div>
+        <div class="step">
+          <p class="step-num">04</p>
+          <h3>Automated follow-up</h3>
+          <p>Leads who go quiet get a structured nudge sequence until they book — or clearly opt out.</p>
+        </div>
+        <div class="step">
+          <p class="step-num">05</p>
+          <h3>Unsold-estimate follow-up</h3>
+          <p>Quotes that went cold get a reason to say yes, instead of quietly expiring in someone's inbox.</p>
+        </div>
+        <div class="step">
+          <p class="step-num">06</p>
+          <h3>Old-customer reactivation</h3>
+          <p>Past customers who haven't booked in a while get a reason to call again — maintenance, tune-ups, replacements.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:var(--paper-2);">
+    <div class="wrap why-grid">
+      <div>
+        <p class="eyebrow">Why now</p>
+        <h2 style="font-size:28px;">The lead isn't the problem. What happens after it arrives is.</h2>
+        <div class="why-list">
+          <div class="why-item">
+            <span class="why-dot"></span>
+            <div>
+              <h4>You're already spending the money</h4>
+              <p>Most established DFW HVAC companies are paying $5,000–$15,000+ a month for leads. This isn't a pitch to spend more — it's a pitch to keep more of what those leads already bring in.</p>
+            </div>
+          </div>
+          <div class="why-item">
+            <span class="why-dot"></span>
+            <div>
+              <h4>Speed decides who gets the job</h4>
+              <p>An AC dies in August, the homeowner calls three or four companies in the same ten minutes. Whoever responds first usually wins the job — not whoever has the best reviews.</p>
+            </div>
+          </div>
+          <div class="why-item">
+            <span class="why-dot"></span>
+            <div>
+              <h4>The category is crowded — the follow-through isn't</h4>
+              <p>Plenty of agencies sell HVAC leads and run HVAC ads in DFW. Very few make sure those leads actually turn into booked, paid jobs.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="quote-card">
+        <p class="eyebrow on-dark">The pitch, in one breath</p>
+        <p class="line"><b>"You're already spending $10,000 a month generating leads.</b> We're not asking you to spend another $10,000. We're going to help you make more money from the leads you're already paying for — then help you generate more once the conversion system is proven."</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="roi-teaser">
+        <div>
+          <p class="eyebrow">Run the numbers</p>
+          <h3>What's a booking-rate fix actually worth to you?</h3>
+          <p>Plug in your monthly lead volume and average ticket size to see what's currently being left on the table — and what recovering it could be worth.</p>
+        </div>
+        <button class="btn-primary" style="background:var(--copper);white-space:nowrap;" onclick="showView('calculator')">Open ROI calculator</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="final-cta" id="audit-section">
+    <div class="wrap cta-grid">
+      <div>
+        <p class="eyebrow on-dark">Get started</p>
+        <h2>Book a revenue audit</h2>
+        <p class="sub">15 minutes. We'll look at your current lead volume, response times, and booking rate, then show you exactly what's being left on the table — before you commit to anything.</p>
+      </div>
+      <form class="audit-form" onsubmit="return submitAudit(event)">
+        <label for="f-name">Your name</label>
+        <input id="f-name" type="text" placeholder="Jordan Reyes" required>
+        <label for="f-company">Company</label>
+        <input id="f-company" type="text" placeholder="Reyes Air &amp; Heat" required>
+        <label for="f-phone">Phone</label>
+        <input id="f-phone" type="tel" placeholder="(817) 555-0100" required>
+        <label for="f-leads">Approx. monthly leads (optional)</label>
+        <input id="f-leads" type="number" placeholder="150">
+        <button type="submit">Request my audit</button>
+        <p class="form-note" id="audit-error">Enter your name, company, and phone to continue.</p>
+        <p class="form-success" id="audit-success">Got it — we'll text you shortly to set up a time.</p>
+      </form>
+    </div>
+  </section>
+
+</div>
+
+<!-- ======================= ROI CALCULATOR ======================= -->
+<div class="view" id="view-calculator">
+  <div class="wrap calc-page">
+    <div class="calc-head">
+      <p class="eyebrow">ROI calculator</p>
+      <h1>What's your current booking rate costing you?</h1>
+      <p>This models revenue you're likely losing on leads you're already paying for — and what closing that gap could be worth.</p>
+    </div>
+
+    <div class="calc-grid">
+      <div class="calc-inputs">
+        <div class="field">
+          <div class="field-top"><label for="in-leads">Monthly leads</label><span class="val" id="out-leads">150</span></div>
+          <input type="range" id="in-leads" min="20" max="500" step="5" value="150" oninput="calcROI()">
+          <p class="field-hint">Calls + web form fills + LSA leads combined, per month.</p>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="in-ticket">Average job value</label><span class="val" id="out-ticket">$650</span></div>
+          <input type="range" id="in-ticket" min="150" max="8000" step="50" value="650" oninput="calcROI()">
+          <p class="field-hint">Blended across repairs, tune-ups, and full replacements.</p>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="in-booking">Current booking rate</label><span class="val" id="out-booking">31%</span></div>
+          <input type="range" id="in-booking" min="10" max="80" step="1" value="31" oninput="calcROI()">
+          <p class="field-hint">Share of leads that turn into a scheduled appointment today.</p>
+        </div>
+        <div class="field">
+          <div class="field-top"><label for="in-close">Appointment-to-sale rate</label><span class="val" id="out-close">70%</span></div>
+          <input type="range" id="in-close" min="30" max="95" step="1" value="70" oninput="calcROI()">
+          <p class="field-hint">Share of booked appointments that turn into a paid job.</p>
+        </div>
+      </div>
+
+      <div class="calc-results">
+        <div class="result-row">
+          <div class="metric-card hero-metric" style="grid-column:1/3;">
+            <p class="m-label">Estimated revenue recovered per month</p>
+            <p class="m-value"><span id="out-recovered">$0</span></p>
+            <p class="m-sub" id="out-recovered-year">$0/year at this volume</p>
+          </div>
+        </div>
+        <div class="result-row">
+          <div class="metric-card">
+            <p class="m-label">Jobs sold today</p>
+            <p class="m-value" id="out-jobs-today">0</p>
+          </div>
+          <div class="metric-card">
+            <p class="m-label">Jobs sold, projected</p>
+            <p class="m-value" id="out-jobs-after">0</p>
+          </div>
+          <div class="metric-card">
+            <p class="m-label">Revenue today</p>
+            <p class="m-value" id="out-rev-today">$0</p>
+          </div>
+          <div class="metric-card">
+            <p class="m-label">Revenue, projected</p>
+            <p class="m-value" id="out-rev-after">$0</p>
+          </div>
+        </div>
+        <div class="compare-bars">
+          <h4>Booking rate: today vs. projected</h4>
+          <div class="bar-row">
+            <div class="bar-label"><span>Today</span><b id="bar-today-label">31%</b></div>
+            <div class="bar-track"><div class="bar-fill today" id="bar-today" style="width:31%;"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label"><span>With DFW Lead Connect</span><b id="bar-after-label">46%</b></div>
+            <div class="bar-track"><div class="bar-fill after" id="bar-after" style="width:46%;"></div></div>
+          </div>
+        </div>
+        <div class="assumption-note">
+          Assumption: instant response, AI booking, and structured follow-up typically lift booking rate by <b>15 percentage points</b>, capped at 85%. Your actual results depend on lead quality and how leads are currently handled — this is a planning estimate, not a guarantee.
+        </div>
+        <button class="btn-primary" style="width:100%;padding:14px;" onclick="goToAuditFromCalc()">Book a revenue audit to validate this</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= DASHBOARD ======================= -->
+<div class="view" id="view-dashboard">
+  <div class="wrap dash-page">
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Demo — sample account</p>
+        <h1>Reyes Air &amp; Heat — revenue recovery dashboard</h1>
+        <p>Illustrative data showing what you'd see once the system is live on your leads.</p>
+      </div>
+      <span class="dash-tag">Sample data</span>
+    </div>
+
+    <div class="dash-metrics">
+      <div class="metric-card"><p class="m-label">Leads this month</p><p class="m-value">212</p></div>
+      <div class="metric-card"><p class="m-label">Avg. response time</p><p class="m-value green">42s</p></div>
+      <div class="metric-card"><p class="m-label">Appointments booked</p><p class="m-value">97</p></div>
+      <div class="metric-card"><p class="m-label">Leads recovered</p><p class="m-value green">34</p></div>
+      <div class="metric-card"><p class="m-label">Revenue attributed</p><p class="m-value">$61,400</p></div>
+      <div class="metric-card"><p class="m-label">Booking rate</p><p class="m-value green">45.8%</p></div>
+    </div>
+
+    <div class="dash-body">
+      <div class="panel">
+        <h3>Recent activity</h3>
+
+        <div class="activity-row">
+          <div class="activity-left">
+            <p class="a-source">Missed call</p>
+            <p class="a-name">(469) 555-0118</p>
+            <p class="a-detail">Texted back in 11s · booked Wed 10:00am</p>
+          </div>
+          <span class="badge booked">Booked</span>
+        </div>
+        <div class="activity-row">
+          <div class="activity-left">
+            <p class="a-source">Web lead</p>
+            <p class="a-name">Dana K.</p>
+            <p class="a-detail">Qualified via SMS · booked Thu 1:00pm</p>
+          </div>
+          <span class="badge booked">Booked</span>
+        </div>
+        <div class="activity-row">
+          <div class="activity-left">
+            <p class="a-source">Estimate #3892</p>
+            <p class="a-name">Full system replacement</p>
+            <p class="a-detail">Follow-up #2 sent · awaiting response</p>
+          </div>
+          <span class="badge pending">Pending</span>
+        </div>
+        <div class="activity-row">
+          <div class="activity-left">
+            <p class="a-source">Reactivation</p>
+            <p class="a-name">Miguel R. — customer since 2021</p>
+            <p class="a-detail">Booked annual maintenance visit</p>
+          </div>
+          <span class="badge recovered">Recovered</span>
+        </div>
+        <div class="activity-row">
+          <div class="activity-left">
+            <p class="a-source">Missed call</p>
+            <p class="a-name">(817) 555-0142</p>
+            <p class="a-detail">Texted back in 8s · no response yet</p>
+          </div>
+          <span class="badge pending">Pending</span>
+        </div>
+        <div class="activity-row">
+          <div class="activity-left">
+            <p class="a-source">Web lead</p>
+            <p class="a-name">Sarah T.</p>
+            <p class="a-detail">No cool air, 2nd floor · booked Thu 2:00pm</p>
+          </div>
+          <span class="badge booked">Booked</span>
+        </div>
+        <div class="activity-row">
+          <div class="activity-left">
+            <p class="a-source">Old lead reactivation</p>
+            <p class="a-name">Priya N. — quoted 4 months ago</p>
+            <p class="a-detail">Re-engaged · scheduled estimate revisit</p>
+          </div>
+          <span class="badge recovered">Recovered</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Leads vs. booked — last 4 weeks</h3>
+        <div class="weekly-chart">
+          <div class="week-col">
+            <div class="week-bars">
+              <div class="bar leads" style="height:70%;"></div>
+              <div class="bar booked" style="height:28%;"></div>
+            </div>
+            <span class="week-label">Wk 1</span>
+          </div>
+          <div class="week-col">
+            <div class="week-bars">
+              <div class="bar leads" style="height:80%;"></div>
+              <div class="bar booked" style="height:34%;"></div>
+            </div>
+            <span class="week-label">Wk 2</span>
+          </div>
+          <div class="week-col">
+            <div class="week-bars">
+              <div class="bar leads" style="height:76%;"></div>
+              <div class="bar booked" style="height:38%;"></div>
+            </div>
+            <span class="week-label">Wk 3</span>
+          </div>
+          <div class="week-col">
+            <div class="week-bars">
+              <div class="bar leads" style="height:90%;"></div>
+              <div class="bar booked" style="height:48%;"></div>
+            </div>
+            <span class="week-label">Wk 4</span>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i style="background:#B9C3CA;"></i>Total leads</span>
+          <span><i style="background:var(--copper);"></i>Booked</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>DFW Lead Connect — HVAC revenue recovery</span>
+    <span>V1 demo</span>
+  </div>
+</footer>
+
+<script>
+  function showView(name){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+name).classList.add('active');
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    var btn = document.querySelector('nav.tabs button[data-tab="'+name+'"]');
+    if(btn) btn.classList.add('active');
+    window.scrollTo({top:0,behavior:'instant'});
+  }
+
+  function goToAudit(){
+    showView('overview');
+    setTimeout(function(){
+      document.getElementById('audit-section').scrollIntoView({behavior:'smooth'});
+    },50);
+  }
+
+  function goToAuditFromCalc(){
+    goToAudit();
+  }
+
+  function submitAudit(e){
+    e.preventDefault();
+    var name = document.getElementById('f-name').value.trim();
+    var company = document.getElementById('f-company').value.trim();
+    var phone = document.getElementById('f-phone').value.trim();
+    var errorEl = document.getElementById('audit-error');
+    var successEl = document.getElementById('audit-success');
+    if(!name || !company || !phone){
+      errorEl.style.display = 'block';
+      successEl.style.display = 'none';
+      return false;
+    }
+    errorEl.style.display = 'none';
+    successEl.style.display = 'block';
+    return false;
+  }
+
+  function fmtMoney(n){
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+
+  function calcROI(){
+    var leads = parseInt(document.getElementById('in-leads').value,10);
+    var ticket = parseInt(document.getElementById('in-ticket').value,10);
+    var booking = parseInt(document.getElementById('in-booking').value,10);
+    var close = parseInt(document.getElementById('in-close').value,10);
+
+    document.getElementById('out-leads').textContent = leads;
+    document.getElementById('out-ticket').textContent = fmtMoney(ticket);
+    document.getElementById('out-booking').textContent = booking + '%';
+    document.getElementById('out-close').textContent = close + '%';
+
+    var projectedBooking = Math.min(booking + 15, 85);
+
+    var jobsToday = leads * (booking/100) * (close/100);
+    var jobsAfter = leads * (projectedBooking/100) * (close/100);
+    var revToday = jobsToday * ticket;
+    var revAfter = jobsAfter * ticket;
+    var recovered = Math.max(revAfter - revToday, 0);
+
+    document.getElementById('out-jobs-today').textContent = Math.round(jobsToday);
+    document.getElementById('out-jobs-after').textContent = Math.round(jobsAfter);
+    document.getElementById('out-rev-today').textContent = fmtMoney(revToday);
+    document.getElementById('out-rev-after').textContent = fmtMoney(revAfter);
+    document.getElementById('out-recovered').textContent = fmtMoney(recovered);
+    document.getElementById('out-recovered-year').textContent = fmtMoney(recovered*12) + '/year at this volume';
+
+    document.getElementById('bar-today').style.width = booking + '%';
+    document.getElementById('bar-today-label').textContent = booking + '%';
+    document.getElementById('bar-after').style.width = projectedBooking + '%';
+    document.getElementById('bar-after-label').textContent = projectedBooking + '%';
+  }
+
+  calcROI();
+</script>
+
+</body>
+</html>
