@@ -768,14 +768,6 @@
 
   async function submitAudit(e){
     e.preventDefault();
-    // iOS Safari can leave a tapped autofill suggestion uncommitted to the
-    // input's actual value until the field loses focus. Force a blur on
-    // whatever's currently focused, then yield, so the browser flushes the
-    // autofilled value into the DOM before we read it.
-    if (document.activeElement && typeof document.activeElement.blur === 'function') {
-      document.activeElement.blur();
-    }
-    await new Promise(function(resolve){ setTimeout(resolve, 150); });
     var name = document.getElementById('f-name').value.trim();
     var company = document.getElementById('f-company').value.trim();
     var phone = document.getElementById('f-phone').value.trim();
@@ -783,13 +775,7 @@
     var errorEl = document.getElementById('audit-error');
     var successEl = document.getElementById('audit-success');
     if(!name || !company || !phone){
-      // TEMPORARY diagnostic: show which field(s) read empty and their
-      // actual lengths, to debug an iOS-autofill-specific false negative.
-      var missing = [];
-      if(!name) missing.push('name(len=' + name.length + ')');
-      if(!company) missing.push('company(len=' + company.length + ')');
-      if(!phone) missing.push('phone(len=' + phone.length + ')');
-      errorEl.textContent = 'DEBUG missing: ' + missing.join(', ');
+      errorEl.textContent = 'Enter your name, company, and phone to continue.';
       errorEl.style.display = 'block';
       successEl.style.display = 'none';
       return false;
@@ -811,10 +797,7 @@
           leadType: 'web_form'
         })
       });
-      if (!leadResponse.ok) {
-        var leadErrBody = await leadResponse.text();
-        throw new Error('lead intake failed (' + leadResponse.status + '): ' + leadErrBody);
-      }
+      if (!leadResponse.ok) throw new Error('lead intake failed');
       var lead = await leadResponse.json();
 
       var conversationResponse = await fetch('/api/conversations/start', {
@@ -822,16 +805,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leadId: lead.id })
       });
-      if (!conversationResponse.ok) {
-        var convErrBody = await conversationResponse.text();
-        throw new Error('conversation start failed (' + conversationResponse.status + '): ' + convErrBody);
-      }
+      if (!conversationResponse.ok) throw new Error('conversation start failed');
 
       successEl.style.display = 'block';
     } catch (err) {
-      // TEMPORARY diagnostic: surface the real failure instead of the
-      // generic static error text, which was masking this branch entirely.
-      errorEl.textContent = 'DEBUG error: ' + (err && err.message ? err.message : String(err));
+      errorEl.textContent = 'Something went wrong submitting your request. Please try again or call us directly.';
       errorEl.style.display = 'block';
     }
 

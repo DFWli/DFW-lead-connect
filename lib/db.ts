@@ -6,8 +6,22 @@ declare global {
   var __leadsDb: Database.Database | undefined;
 }
 
+function getDbPath(): string {
+  // On Vercel the deployed function bundle's filesystem is read-only
+  // outside of /tmp, and our repo's data/ directory isn't part of the
+  // bundle anyway -- better-sqlite3 can't create a file there at all.
+  // /tmp is writable but ephemeral (reset on every cold start/redeploy),
+  // which is fine for now: this unblocks the demo pipeline end-to-end,
+  // but real lead data still needs a hosted database before this goes
+  // live for actual customers (see README).
+  if (process.env.VERCEL) {
+    return "/tmp/leads.db";
+  }
+  return path.join(process.cwd(), "data", "leads.db");
+}
+
 function createConnection(): Database.Database {
-  const dbPath = path.join(process.cwd(), "data", "leads.db");
+  const dbPath = getDbPath();
   const db = new Database(dbPath, { timeout: 10000 });
   db.pragma("journal_mode = WAL");
   db.exec(`
