@@ -221,6 +221,15 @@
     padding:11px 12px;color:#F1F2ED;font-size:14px;font-family:var(--font-body);
   }
   form.audit-form input:focus{outline:none;border-color:var(--copper);}
+  form.audit-form input:-webkit-autofill,
+  form.audit-form input:-webkit-autofill:hover,
+  form.audit-form input:-webkit-autofill:focus,
+  form.audit-form input:-webkit-autofill:active{
+    -webkit-box-shadow:0 0 0px 1000px #12202B inset;
+    -webkit-text-fill-color:#F1F2ED;
+    caret-color:#F1F2ED;
+    transition:background-color 5000s ease-in-out 0s;
+  }
   form.audit-form button{
     margin-top:22px;width:100%;background:var(--copper);color:#241205;border:none;
     padding:13px;border-radius:8px;font-size:14.5px;font-weight:600;
