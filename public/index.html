@@ -768,11 +768,14 @@
 
   async function submitAudit(e){
     e.preventDefault();
-    // iOS can insert a tapped autofill suggestion into the field slightly
-    // after the tap that submits the form, so reading .value synchronously
-    // here can catch it still empty. Yield briefly so the browser finishes
-    // committing the autofilled value before we read it.
-    await new Promise(function(resolve){ setTimeout(resolve, 50); });
+    // iOS Safari can leave a tapped autofill suggestion uncommitted to the
+    // input's actual value until the field loses focus. Force a blur on
+    // whatever's currently focused, then yield, so the browser flushes the
+    // autofilled value into the DOM before we read it.
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+    await new Promise(function(resolve){ setTimeout(resolve, 150); });
     var name = document.getElementById('f-name').value.trim();
     var company = document.getElementById('f-company').value.trim();
     var phone = document.getElementById('f-phone').value.trim();
