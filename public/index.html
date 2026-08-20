@@ -811,7 +811,10 @@
           leadType: 'web_form'
         })
       });
-      if (!leadResponse.ok) throw new Error('lead intake failed');
+      if (!leadResponse.ok) {
+        var leadErrBody = await leadResponse.text();
+        throw new Error('lead intake failed (' + leadResponse.status + '): ' + leadErrBody);
+      }
       var lead = await leadResponse.json();
 
       var conversationResponse = await fetch('/api/conversations/start', {
@@ -819,10 +822,16 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leadId: lead.id })
       });
-      if (!conversationResponse.ok) throw new Error('conversation start failed');
+      if (!conversationResponse.ok) {
+        var convErrBody = await conversationResponse.text();
+        throw new Error('conversation start failed (' + conversationResponse.status + '): ' + convErrBody);
+      }
 
       successEl.style.display = 'block';
     } catch (err) {
+      // TEMPORARY diagnostic: surface the real failure instead of the
+      // generic static error text, which was masking this branch entirely.
+      errorEl.textContent = 'DEBUG error: ' + (err && err.message ? err.message : String(err));
       errorEl.style.display = 'block';
     }
 
