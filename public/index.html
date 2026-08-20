@@ -766,11 +766,12 @@
     goToAudit();
   }
 
-  function submitAudit(e){
+  async function submitAudit(e){
     e.preventDefault();
     var name = document.getElementById('f-name').value.trim();
     var company = document.getElementById('f-company').value.trim();
     var phone = document.getElementById('f-phone').value.trim();
+    var monthlyLeads = document.getElementById('f-leads').value.trim();
     var errorEl = document.getElementById('audit-error');
     var successEl = document.getElementById('audit-success');
     if(!name || !company || !phone){
@@ -779,7 +780,37 @@
       return false;
     }
     errorEl.style.display = 'none';
-    successEl.style.display = 'block';
+    successEl.style.display = 'none';
+
+    var message = 'Company: ' + company + (monthlyLeads ? ', ~' + monthlyLeads + ' leads/month' : '');
+
+    try {
+      var leadResponse = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          phone: phone,
+          source: 'audit_request_form',
+          message: message,
+          leadType: 'web_form'
+        })
+      });
+      if (!leadResponse.ok) throw new Error('lead intake failed');
+      var lead = await leadResponse.json();
+
+      var conversationResponse = await fetch('/api/conversations/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: lead.id })
+      });
+      if (!conversationResponse.ok) throw new Error('conversation start failed');
+
+      successEl.style.display = 'block';
+    } catch (err) {
+      errorEl.style.display = 'block';
+    }
+
     return false;
   }
 
