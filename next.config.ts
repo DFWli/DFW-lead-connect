@@ -11,6 +11,25 @@ const nextConfig: NextConfig = {
       fallback: [],
     };
   },
+  async headers() {
+    // The marketing page is actively iterated on; don't let browsers/CDNs
+    // cache it aggressively, or visitors (and testers) can be stuck on a
+    // stale version after a deploy.
+    return [
+      {
+        source: "/",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, must-revalidate" },
+        ],
+      },
+      {
+        source: "/index.html",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, must-revalidate" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
