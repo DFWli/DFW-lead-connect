@@ -768,6 +768,11 @@
 
   async function submitAudit(e){
     e.preventDefault();
+    // iOS can insert a tapped autofill suggestion into the field slightly
+    // after the tap that submits the form, so reading .value synchronously
+    // here can catch it still empty. Yield briefly so the browser finishes
+    // committing the autofilled value before we read it.
+    await new Promise(function(resolve){ setTimeout(resolve, 50); });
     var name = document.getElementById('f-name').value.trim();
     var company = document.getElementById('f-company').value.trim();
     var phone = document.getElementById('f-phone').value.trim();
