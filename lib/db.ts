@@ -8,7 +8,7 @@ declare global {
 
 function createConnection(): Database.Database {
   const dbPath = path.join(process.cwd(), "data", "leads.db");
-  const db = new Database(dbPath);
+  const db = new Database(dbPath, { timeout: 10000 });
   db.pragma("journal_mode = WAL");
   db.exec(`
     CREATE TABLE IF NOT EXISTS leads (
@@ -22,11 +22,27 @@ function createConnection(): Database.Database {
       created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
     )
   `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      lead_id INTEGER NOT NULL REFERENCES leads(id),
+      direction TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    )
+  `);
   return db;
 }
 
-// Reused across hot-reloads in dev so we don't open a new connection per request.
-export const db = globalThis.__leadsDb ?? createConnection();
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__leadsDb = db;
+// Lazy on purpose: Next.js evaluates route modules (without invoking any
+// handler) during build-time page-data collection, using several parallel
+// worker processes. Opening/migrating the SQLite file at module load time
+// let those workers race on the same fresh file. Deferring the connection
+// until a request handler actually calls getDb() avoids that, and the
+// globalThis cache still reuses one connection per warm process afterward.
+export function getDb(): Database.Database {
+  if (!globalThis.__leadsDb) {
+    globalThis.__leadsDb = createConnection();
+  }
+  return globalThis.__leadsDb;
 }

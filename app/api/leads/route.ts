@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { LEAD_TYPES, LeadRow, toLead } from "@/lib/leads";
 
 export async function POST(request: NextRequest) {
@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const db = getDb();
+
   const insert = db.prepare(`
     INSERT INTO leads (name, phone, source, message, lead_type, status)
     VALUES (@name, @phone, @source, @message, @leadType, 'new')
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  const rows = db
+  const rows = getDb()
     .prepare("SELECT * FROM leads ORDER BY created_at DESC, id DESC")
     .all() as LeadRow[];
 
