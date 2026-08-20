@@ -783,6 +783,13 @@
     var errorEl = document.getElementById('audit-error');
     var successEl = document.getElementById('audit-success');
     if(!name || !company || !phone){
+      // TEMPORARY diagnostic: show which field(s) read empty and their
+      // actual lengths, to debug an iOS-autofill-specific false negative.
+      var missing = [];
+      if(!name) missing.push('name(len=' + name.length + ')');
+      if(!company) missing.push('company(len=' + company.length + ')');
+      if(!phone) missing.push('phone(len=' + phone.length + ')');
+      errorEl.textContent = 'DEBUG missing: ' + missing.join(', ');
       errorEl.style.display = 'block';
       successEl.style.display = 'none';
       return false;
