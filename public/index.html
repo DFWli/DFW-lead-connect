@@ -230,6 +230,15 @@
     caret-color:#F1F2ED;
     transition:background-color 5000s ease-in-out 0s;
   }
+  .sms-consent{
+    display:flex;align-items:flex-start;gap:9px;margin-top:18px;
+  }
+  .sms-consent input[type=checkbox]{
+    margin-top:3px;width:15px;height:15px;flex-shrink:0;accent-color:var(--copper);
+  }
+  .sms-consent span{
+    font-size:11.5px;line-height:1.5;color:#9DAAB2;
+  }
   form.audit-form button{
     margin-top:22px;width:100%;background:var(--copper);color:#241205;border:none;
     padding:13px;border-radius:8px;font-size:14.5px;font-weight:600;
@@ -535,9 +544,13 @@
         <input id="f-phone" type="tel" placeholder="(817) 555-0100" required>
         <label for="f-leads">Approx. monthly leads (optional)</label>
         <input id="f-leads" type="number" placeholder="150">
+        <label class="sms-consent" for="f-sms-consent">
+          <input type="checkbox" id="f-sms-consent">
+          <span>I agree to receive SMS text messages from DFW Lead Connect about my HVAC service inquiry. Message frequency varies (typically 1 message). Msg &amp; data rates may apply. Reply STOP to cancel, HELP for help.</span>
+        </label>
         <button type="submit">Request my audit</button>
         <p class="form-note" id="audit-error">Enter your name, company, and phone to continue.</p>
-        <p class="form-success" id="audit-success">Got it — we'll text you shortly to set up a time.</p>
+        <p class="form-success" id="audit-success">Got it — we'll be in touch shortly to set up a time.</p>
       </form>
     </div>
   </section>
@@ -781,6 +794,7 @@
     var company = document.getElementById('f-company').value.trim();
     var phone = document.getElementById('f-phone').value.trim();
     var monthlyLeads = document.getElementById('f-leads').value.trim();
+    var smsConsent = document.getElementById('f-sms-consent').checked;
     var errorEl = document.getElementById('audit-error');
     var successEl = document.getElementById('audit-success');
     if(!name || !company || !phone){
@@ -809,12 +823,17 @@
       if (!leadResponse.ok) throw new Error('lead intake failed');
       var lead = await leadResponse.json();
 
-      var conversationResponse = await fetch('/api/conversations/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leadId: lead.id })
-      });
-      if (!conversationResponse.ok) throw new Error('conversation start failed');
+      // Only trigger the automated qualifying text if the user opted in --
+      // SMS consent is a separate, unchecked-by-default choice from
+      // submitting the audit request itself.
+      if (smsConsent) {
+        var conversationResponse = await fetch('/api/conversations/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leadId: lead.id })
+        });
+        if (!conversationResponse.ok) throw new Error('conversation start failed');
+      }
 
       successEl.style.display = 'block';
     } catch (err) {
