@@ -4,6 +4,7 @@ import type { Lead } from "@/lib/leads";
 import {
   QUALIFY_LEAD_SYSTEM_PROMPT,
   buildQualifyLeadUserPrompt,
+  formatOutboundMessage,
 } from "@/lib/prompts/qualify-lead";
 
 export async function generateQualifyingMessage(lead: Lead): Promise<string> {
@@ -27,5 +28,5 @@ export async function generateQualifyingMessage(lead: Lead): Promise<string> {
     throw new Error("Claude response did not include a text block.");
   }
 
-  return textBlock.text.trim();
+  return formatOutboundMessage(textBlock.text.trim());
 }

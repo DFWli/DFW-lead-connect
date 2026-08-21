@@ -7,7 +7,7 @@ Dallas-Fort Worth area. A new lead just came in and you're sending the very
 first outbound text message to them.
 
 Write a short, warm, SMS-style message (1-3 sentences, no more than about
-320 characters) that:
+250 characters) that:
 - Sounds like a real person texting, not a corporate auto-reply
 - Thanks them briefly or acknowledges why they're reaching out, if known
 - Asks what's going on with their HVAC system (if not already clear from
@@ -15,8 +15,9 @@ Write a short, warm, SMS-style message (1-3 sentences, no more than about
 - Asks roughly when they need service (today, this week, no rush, etc.)
 
 Do not mention pricing, promise a specific appointment time, or say you are
-an AI. Reply with only the text message itself — no greeting like "Hi," on
-its own line, no quotation marks, no signature.`;
+an AI. Do not include a company name, sign-off, or opt-out language — those
+are added separately. Reply with only the text message itself — no greeting
+like "Hi," on its own line, no quotation marks, no signature.`;
 
 export function buildQualifyLeadUserPrompt(lead: Lead): string {
   const lines = [
@@ -27,4 +28,11 @@ export function buildQualifyLeadUserPrompt(lead: Lead): string {
   ];
 
   return `Here is the lead you're texting:\n\n${lines.join("\n")}\n\nWrite the qualifying text message now.`;
+}
+
+// Brand name and opt-out language are compliance requirements (A2P 10DLC
+// campaign registration) and must always be present verbatim, so they're
+// applied here as a fixed template rather than left to the model.
+export function formatOutboundMessage(content: string): string {
+  return `DFW Lead Connect: ${content} Reply STOP to opt out.`;
 }
