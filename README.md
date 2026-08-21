@@ -108,13 +108,17 @@ Then edit `.env.local`:
 
 - `ANTHROPIC_API_KEY` -- from [console.anthropic.com](https://console.anthropic.com)
   (Settings -> API Keys)
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` -- from the
-  [Twilio Console](https://console.twilio.com) (Account -> API keys & tokens)
+- `TWILIO_ACCOUNT_SID` -- from the [Twilio Console](https://console.twilio.com)
+  home page
+- `TWILIO_API_KEY_SID`, `TWILIO_API_KEY_SECRET` -- from Account -> API keys
+  & tokens -> create a **Restricted** key scoped to Programmable
+  Messaging/SMS only (preferred over the account's master Auth Token --
+  smaller blast radius if it leaks)
 - `TWILIO_PHONE_NUMBER` -- an SMS-capable number purchased in the Twilio
   Console, in E.164 format (e.g. `+18175550100`)
 
 `.env.local` is gitignored and never committed. On Vercel, set the same
-three variables under Project Settings -> Environment Variables (Production
+four variables under Project Settings -> Environment Variables (Production
 scope), then redeploy -- Vercel does not apply new env vars to an
 already-built deployment.
 

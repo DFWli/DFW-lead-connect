@@ -8,14 +8,17 @@ let client: ReturnType<typeof twilio> | null = null;
 
 function getTwilioClient(): ReturnType<typeof twilio> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  if (!accountSid || !authToken) {
+  const apiKeySid = process.env.TWILIO_API_KEY_SID;
+  const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
+  if (!accountSid || !apiKeySid || !apiKeySecret) {
     throw new Error(
-      "TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are not set. Copy .env.example to .env.local and add your Twilio credentials."
+      "TWILIO_ACCOUNT_SID, TWILIO_API_KEY_SID, and TWILIO_API_KEY_SECRET are not set. Copy .env.example to .env.local and add your Twilio credentials."
     );
   }
   if (!client) {
-    client = twilio(accountSid, authToken);
+    // Authenticating with a Restricted API Key (SID + Secret) rather than
+    // the account's master Auth Token -- narrower blast radius if it leaks.
+    client = twilio(apiKeySid, apiKeySecret, { accountSid });
   }
   return client;
 }
