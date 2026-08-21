@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
 
   console.log(`[conversations/start] lead ${lead.id}: ${content}`);
 
-  // Not sending a real SMS yet — sendMessage is currently a logging stub.
-  // Swapping in Twilio/GoHighLevel later only requires changing that one function.
+  // sendMessage handles its own errors internally and never throws, so an
+  // SMS delivery failure never turns into a failed lead-capture request.
   await sendMessage(lead.phone, content);
 
   const insert = db.prepare(`

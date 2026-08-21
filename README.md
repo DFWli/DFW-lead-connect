@@ -17,7 +17,7 @@ lib/messages.ts             Message types and row <-> API mapping
 lib/ai/client.ts            Anthropic client (reads ANTHROPIC_API_KEY)
 lib/ai/qualify-lead.ts      Calls Claude to generate the qualifying SMS text
 lib/prompts/qualify-lead.ts Prompt text for the qualifying message (edit here, not in lib/ai/)
-lib/messaging/send.ts       sendMessage() stub - the one place to swap in Twilio/GoHighLevel later
+lib/messaging/send.ts       sendMessage() - sends SMS via Twilio; the one seam to swap providers later
 data/leads.db               SQLite database file (gitignored, created on first run)
 next.config.ts             Rewrites "/" to public/index.html
 ```
@@ -86,15 +86,17 @@ curl -X POST http://localhost:3000/api/leads \
 curl http://localhost:3000/api/leads
 ```
 
-## AI conversation engine (skeleton)
+## AI conversation engine
 
 `POST /api/conversations/start` takes a `leadId`, looks the lead up, asks
-Claude to draft a short SMS-style qualifying message for it, logs and stores
-that message (`messages` table, `direction: "outbound"`), and returns it.
-**It does not actually send an SMS yet** — `lib/messaging/send.ts` is a
-logging stub. Swapping in a real provider (Twilio, GoHighLevel, etc.) later
-only means rewriting `sendMessage()` in that one file; nothing else in the
-AI or API logic needs to change.
+Claude to draft a short SMS-style qualifying message for it, sends that
+message via Twilio, logs and stores it (`messages` table,
+`direction: "outbound"`), and returns it. `lib/messaging/send.ts` is the one
+seam for the SMS provider -- swapping Twilio for something else (e.g.
+GoHighLevel) only means rewriting `sendMessage()` in that file; nothing else
+in the AI or API logic needs to change. A failed SMS send is caught and
+logged inside `sendMessage()` -- it never fails the request, so a Twilio
+outage doesn't look like a failed lead capture.
 
 ### API key setup
 
@@ -102,9 +104,19 @@ AI or API logic needs to change.
 cp .env.example .env.local
 ```
 
-Then edit `.env.local` and set `ANTHROPIC_API_KEY` to a key from
-[console.anthropic.com](https://console.anthropic.com) (Settings -> API
-Keys). `.env.local` is gitignored and never committed.
+Then edit `.env.local`:
+
+- `ANTHROPIC_API_KEY` -- from [console.anthropic.com](https://console.anthropic.com)
+  (Settings -> API Keys)
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` -- from the
+  [Twilio Console](https://console.twilio.com) (Account -> API keys & tokens)
+- `TWILIO_PHONE_NUMBER` -- an SMS-capable number purchased in the Twilio
+  Console, in E.164 format (e.g. `+18175550100`)
+
+`.env.local` is gitignored and never committed. On Vercel, set the same
+three variables under Project Settings -> Environment Variables (Production
+scope), then redeploy -- Vercel does not apply new env vars to an
+already-built deployment.
 
 ### Try it locally
 
@@ -131,3 +143,9 @@ Response is the stored message record, e.g.:
 A missing/non-existent `leadId` returns `400`/`404` respectively. A missing
 `ANTHROPIC_API_KEY` returns a `500` with a message pointing back at this
 setup section instead of a raw stack trace.
+
+This will send a real text message to the lead's phone number via Twilio.
+Use your own number when testing locally (create the lead with your own
+phone). A missing/invalid Twilio config does not fail the request -- check
+the server logs for `[sendMessage]` lines to see whether the SMS actually
+sent.
